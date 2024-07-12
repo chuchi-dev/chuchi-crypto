@@ -2,7 +2,7 @@
 //!
 //! ## Example
 //! ```
-//! use fire_crypto::cipher::{Keypair, Nonce};
+//! use chuchi_crypto::cipher::{Keypair, Nonce};
 //!
 //! // Alice creates a key only she knows.
 //! let alice_privkey = Keypair::new();

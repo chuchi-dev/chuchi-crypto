@@ -1,10 +1,10 @@
-[![CI](https://github.com/fire-lib/fire-crypto/actions/workflows/ci.yaml/badge.svg)](https://github.com/fire-lib/fire-crypto/actions/workflows/ci.yaml)
-[![crates.io](https://img.shields.io/crates/v/fire-crypto)](https://crates.io/crates/fire-crypto)
-[![docs.rs](https://img.shields.io/docsrs/fire-crypto)](https://docs.rs/fire-crypto)
+[![CI](https://github.com/chuchi-dev/chuchi-crypto/actions/workflows/ci.yaml/badge.svg)](https://github.com/chuchi-dev/chuchi-crypto/actions/workflows/ci.yaml)
+[![crates.io](https://img.shields.io/crates/v/chuchi-crypto)](https://crates.io/crates/chuchi-crypto)
+[![docs.rs](https://img.shields.io/docsrs/chuchi-crypto)](https://docs.rs/chuchi-crypto)
 
 ## Crypto library
 
-Fire crypto ought to be a simple to use crypto providing encryption and signing.
+Chuchi crypto ought to be a simple to use crypto providing encryption and signing.
 
 ## Dependency
 
