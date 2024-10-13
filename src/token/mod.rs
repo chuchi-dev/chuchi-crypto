@@ -197,6 +197,7 @@ mod impl_postgres {
 	use super::*;
 
 	use bytes::BytesMut;
+	use chuchi_postgres::filter::ParamData;
 	use postgres_types::{to_sql_checked, FromSql, IsNull, ToSql, Type};
 
 	impl<const SI: usize> ToSql for Token<SI> {
@@ -232,6 +233,12 @@ mod impl_postgres {
 
 		fn accepts(ty: &Type) -> bool {
 			<&str as FromSql>::accepts(ty)
+		}
+	}
+
+	impl<const SI: usize> ParamData for Token<SI> {
+		fn is_null(&self) -> bool {
+			false
 		}
 	}
 }
