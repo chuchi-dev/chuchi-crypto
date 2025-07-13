@@ -2,18 +2,15 @@ use super::{PublicKey, SharedSecret};
 #[cfg(feature = "b64")]
 use crate::error::DecodeError;
 use crate::error::TryFromError;
+use crate::utils::OsRngPanic;
 
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
 
-use rand::rngs::OsRng;
-
 use x25519_dalek as x;
 
 #[cfg(feature = "b64")]
-use base64::engine::{general_purpose::URL_SAFE_NO_PAD, Engine};
-
-// EphemeralKeypair
+use base64::engine::{Engine, general_purpose::URL_SAFE_NO_PAD};
 
 /// A Keypair that can only be used once.
 pub struct EphemeralKeypair {
@@ -23,7 +20,7 @@ pub struct EphemeralKeypair {
 
 impl EphemeralKeypair {
 	pub fn new() -> Self {
-		let secret = x::EphemeralSecret::random_from_rng(OsRng);
+		let secret = x::EphemeralSecret::random_from_rng(&mut OsRngPanic);
 		let public = PublicKey::from_ephemeral_secret(&secret);
 
 		Self { secret, public }
@@ -67,7 +64,9 @@ impl Keypair {
 	}
 
 	pub fn new() -> Self {
-		Self::from_static_secret(x::StaticSecret::random_from_rng(OsRng))
+		Self::from_static_secret(x::StaticSecret::random_from_rng(
+			&mut OsRngPanic,
+		))
 	}
 
 	/// ## Panics
@@ -80,9 +79,9 @@ impl Keypair {
 		self.secret.to_bytes()
 	}
 
-	// pub fn as_slice(&self) -> &[u8] {
-	// 	self.secret.as_ref()
-	// }
+	pub fn as_slice(&self) -> &[u8] {
+		self.secret.as_ref()
+	}
 
 	pub fn public(&self) -> &PublicKey {
 		&self.public
@@ -91,6 +90,12 @@ impl Keypair {
 	pub fn diffie_hellman(&self, public_key: &PublicKey) -> SharedSecret {
 		let secret = self.secret.diffie_hellman(public_key.inner());
 		SharedSecret::from_shared_secret(secret)
+	}
+}
+
+impl AsRef<[u8]> for Keypair {
+	fn as_ref(&self) -> &[u8] {
+		self.secret.as_bytes()
 	}
 }
 
@@ -191,7 +196,7 @@ mod impl_postgres {
 	use super::*;
 
 	use bytes::BytesMut;
-	use postgres_types::{to_sql_checked, FromSql, IsNull, ToSql, Type};
+	use postgres_types::{FromSql, IsNull, ToSql, Type, to_sql_checked};
 
 	impl ToSql for Keypair {
 		fn to_sql(

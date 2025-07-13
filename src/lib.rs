@@ -1,12 +1,13 @@
 #![doc = include_str!("../README.md")]
 #![allow(clippy::new_without_default)]
 
-use rand::rngs::OsRng;
 use rand::RngCore;
 
 /// used internally when b64
 #[cfg(feature = "b64")]
 use std::str::FromStr;
+
+use crate::utils::OsRngPanic;
 
 #[cfg(feature = "cipher")]
 pub mod cipher;
@@ -20,6 +21,8 @@ pub mod hash;
 pub mod token;
 
 pub mod error;
+
+mod utils;
 
 // from https://docs.rs/crate/chacha20/0.3.4/source/src/cipher.rs
 /// Xors two buffers. Both buffers need to have the same length.
@@ -35,25 +38,19 @@ pub fn xor(buf: &mut [u8], key: &[u8]) {
 }
 
 /// Fills a slice with random bytes.
+///
+/// ## OsRng
+/// This a cryptographically secure random number generator.
+/// Which uses the operating system's random number generator.
+/// [See](https://docs.rs/rand/latest/rand/rngs/struct.OsRng.html)
 pub fn fill_random(buf: &mut [u8]) {
-	OsRng.fill_bytes(buf)
+	OsRngPanic.fill_bytes(buf)
 }
 
-/// todo replace when rust #88582 get's stabilized
-///
 /// Since this function multiplies s with 4
 /// s needs to be 1/4 of usize::MAX in practice this should not be a problem
 /// since the tokens won't be that long.
 #[inline(always)]
 const fn calculate_b64_len(s: usize) -> usize {
-	let s = 4 * s;
-
-	// following block is a div ceil
-	let mut d = s / 3;
-	let r = s % 3;
-	if r > 0 {
-		d += 1;
-	}
-
-	d
+	(4 * s).div_ceil(3)
 }

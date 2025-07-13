@@ -2,17 +2,16 @@ use super::{PublicKey, Signature};
 #[cfg(feature = "b64")]
 use crate::error::DecodeError;
 use crate::error::TryFromError;
+use crate::utils::OsRngPanic;
 
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
-
-use rand::rngs::OsRng;
 
 use ed::Signer;
 use ed25519_dalek as ed;
 
 #[cfg(feature = "b64")]
-use base64::engine::{general_purpose::URL_SAFE_NO_PAD, Engine};
+use base64::engine::{Engine, general_purpose::URL_SAFE_NO_PAD};
 
 pub struct Keypair {
 	secret: ed::SigningKey,
@@ -22,7 +21,7 @@ impl Keypair {
 	pub const LEN: usize = 32;
 
 	pub fn new() -> Self {
-		Self::from_keypair(ed::SigningKey::generate(&mut OsRng))
+		Self::from_keypair(ed::SigningKey::generate(&mut OsRngPanic))
 	}
 
 	pub(crate) fn from_keypair(keypair: ed::SigningKey) -> Self {
@@ -41,6 +40,10 @@ impl Keypair {
 
 	pub fn to_bytes(&self) -> [u8; 32] {
 		self.secret.to_bytes()
+	}
+
+	pub fn as_slice(&self) -> &[u8] {
+		self.secret.as_bytes()
 	}
 
 	pub fn public(&self) -> &PublicKey {
@@ -120,12 +123,11 @@ impl crate::FromStr for Keypair {
 	}
 }
 
-// todo add again
-// impl AsRef<[u8]> for Keypair {
-// 	fn as_ref(&self) -> &[u8] {
-// 		self.secret.as_bytes()
-// 	}
-// }
+impl AsRef<[u8]> for Keypair {
+	fn as_ref(&self) -> &[u8] {
+		self.secret.as_bytes()
+	}
+}
 
 impl Clone for Keypair {
 	fn clone(&self) -> Self {
@@ -169,12 +171,12 @@ mod impl_protobuf {
 	use super::*;
 
 	use protopuffer::{
+		WireType,
 		bytes::BytesWrite,
 		decode::{DecodeError, DecodeMessage, FieldKind},
 		encode::{
 			EncodeError, EncodeMessage, FieldOpt, MessageEncoder, SizeBuilder,
 		},
-		WireType,
 	};
 
 	impl EncodeMessage for Keypair {
@@ -231,7 +233,7 @@ mod impl_postgres {
 	use super::*;
 
 	use bytes::BytesMut;
-	use postgres_types::{to_sql_checked, FromSql, IsNull, ToSql, Type};
+	use postgres_types::{FromSql, IsNull, ToSql, Type, to_sql_checked};
 
 	impl ToSql for Keypair {
 		fn to_sql(

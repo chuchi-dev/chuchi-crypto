@@ -7,18 +7,25 @@ use std::fmt;
 
 use zeroize::Zeroize;
 
-use chacha20::cipher::typenum::U10;
 use chacha20::cipher::{KeyIvInit, StreamCipher, StreamCipherSeek};
-use chacha20::{hchacha, XChaCha20};
+use chacha20::{Rounds, XChaCha20, hchacha};
 
 use poly1305::Poly1305;
 use universal_hash::{KeyInit, UniversalHash};
 
-use generic_array::GenericArray;
-
 // KEY
 
 const BLOCK_SIZE: u64 = 64;
+
+/// Not sure this is the right aproach or we should move to
+/// maybe 12.
+/// The 10 originally came from https://github.com/RustCrypto/nacl-compat/blob/20be967430389e4df9dc0c1c8920eda8681b5dca/crypto_secretstream/src/stream.rs#L50
+#[derive(Debug, Clone, Copy)]
+pub struct R10;
+
+impl Rounds for R10 {
+	const COUNT: usize = 10;
+}
 
 /// A Key that allows to encrypt and decrypt messages.
 pub struct Key {
@@ -35,11 +42,8 @@ impl Key {
 		initial_nonce: [u8; 24],
 	) -> Self {
 		// is this really necessary See: https://github.com/RustCrypto/AEADs/pull/295
-		let shared_secret = hchacha::<U10>(
-			shared_secret.as_ref().into(),
-			&GenericArray::default(),
-		)
-		.into();
+		let shared_secret =
+			hchacha::<R10>(&shared_secret.into(), &Default::default()).into();
 
 		Self {
 			shared_secret,
@@ -200,13 +204,13 @@ impl Cipher {
 		xor_nonce_with_u64(&mut iv, count);
 
 		let mut cipher =
-			XChaCha20::new(shared_secret.into(), iv.as_ref().into());
+			<XChaCha20 as KeyIvInit>::new(shared_secret.into(), &iv.into());
 
 		// Derive Poly1305 key from the first 32-bytes of the ChaCha20 keystream
 		let mut mac_key = [0u8; 32];
 		cipher.apply_keystream(&mut mac_key);
 
-		let poly = Poly1305::new(mac_key.as_ref().into());
+		let poly = Poly1305::new(&mac_key.into());
 
 		mac_key.zeroize();
 

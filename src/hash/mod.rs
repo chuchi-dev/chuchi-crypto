@@ -11,14 +11,12 @@ use crate::error::DecodeError;
 use crate::error::TryFromError;
 
 use std::convert::{TryFrom, TryInto};
-use std::mem::ManuallyDrop;
-use std::{fmt, ptr};
+use std::fmt;
 
 use blake2::{Blake2b512, Digest};
-use generic_array::{typenum::U64, GenericArray};
 
 #[cfg(feature = "b64")]
-use base64::engine::{general_purpose::URL_SAFE_NO_PAD, Engine};
+use base64::engine::{Engine, general_purpose::URL_SAFE_NO_PAD};
 
 pub fn hash(data: impl AsRef<[u8]>) -> Hash {
 	Hasher::hash(data)
@@ -41,25 +39,13 @@ impl Hasher {
 
 	pub fn finalize(self) -> Hash {
 		let arr = self.inner.finalize();
-		Hash {
-			bytes: convert_generic_array(arr),
-		}
+		Hash { bytes: arr.into() }
 	}
 
 	pub fn hash(data: impl AsRef<[u8]>) -> Hash {
 		let mut hasher = Hasher::new();
 		hasher.update(data);
 		hasher.finalize()
-	}
-}
-
-fn convert_generic_array<T>(arr: GenericArray<T, U64>) -> [T; 64] {
-	// safe because both have the same memory layout
-	// and generic array does it
-	unsafe {
-		// see https://docs.rs/generic-array/0.14.4/src/generic_array/lib.rs.html#636
-		let a = ManuallyDrop::new(arr);
-		ptr::read(&*a as *const GenericArray<T, U64> as *const [T; 64])
 	}
 }
 

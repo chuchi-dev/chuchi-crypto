@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@1.67
+        uses: dtolnay/rust-toolchain@1.85
       - name: Build no features
         run: cargo build
       - name: Build cipher

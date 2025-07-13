@@ -1,17 +1,17 @@
 #[cfg(feature = "b64")]
 use crate::error::DecodeError;
 use crate::error::TryFromError;
+use crate::utils::OsRngPanic;
 
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
 
-use rand::rngs::OsRng;
 use rand::RngCore;
 
 #[cfg(feature = "b64")]
-use base64::engine::general_purpose::URL_SAFE_NO_PAD;
-#[cfg(feature = "b64")]
 use base64::Engine;
+#[cfg(feature = "b64")]
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 
 /// A random Token
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -28,7 +28,7 @@ impl<const S: usize> Token<S> {
 	pub fn new() -> Self {
 		let mut bytes = [0u8; S];
 
-		OsRng.fill_bytes(&mut bytes);
+		OsRngPanic.fill_bytes(&mut bytes);
 
 		Self { bytes }
 	}
@@ -140,12 +140,12 @@ mod protobuf {
 	use super::*;
 
 	use protopuffer::{
+		WireType,
 		bytes::BytesWrite,
 		decode::{DecodeError, DecodeMessage, FieldKind},
 		encode::{
 			EncodeError, EncodeMessage, FieldOpt, MessageEncoder, SizeBuilder,
 		},
-		WireType,
 	};
 
 	impl<const SI: usize> EncodeMessage for Token<SI> {
@@ -197,7 +197,7 @@ mod impl_postgres {
 	use super::*;
 
 	use bytes::BytesMut;
-	use postgres_types::{to_sql_checked, FromSql, IsNull, ToSql, Type};
+	use postgres_types::{FromSql, IsNull, ToSql, Type, to_sql_checked};
 
 	impl<const SI: usize> ToSql for Token<SI> {
 		fn to_sql(
