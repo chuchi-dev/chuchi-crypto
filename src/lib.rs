@@ -1,13 +1,13 @@
 #![doc = include_str!("../README.md")]
 #![allow(clippy::new_without_default)]
 
-use rand::RngCore;
+use rand::Rng;
 
 /// used internally when b64
 #[cfg(feature = "b64")]
 use std::str::FromStr;
 
-use crate::utils::OsRngPanic;
+use crate::utils::SysRngPanic;
 
 #[cfg(feature = "cipher")]
 pub mod cipher;
@@ -44,7 +44,7 @@ pub fn xor(buf: &mut [u8], key: &[u8]) {
 /// Which uses the operating system's random number generator.
 /// [See](https://docs.rs/rand/latest/rand/rngs/struct.OsRng.html)
 pub fn fill_random(buf: &mut [u8]) {
-	OsRngPanic.fill_bytes(buf)
+	SysRngPanic.fill_bytes(buf)
 }
 
 /// Since this function multiplies s with 4

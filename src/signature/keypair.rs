@@ -2,7 +2,7 @@ use super::{PublicKey, Signature};
 #[cfg(feature = "b64")]
 use crate::error::DecodeError;
 use crate::error::TryFromError;
-use crate::utils::OsRngPanic;
+use crate::utils::SysRngPanic;
 
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
@@ -21,7 +21,7 @@ impl Keypair {
 	pub const LEN: usize = 32;
 
 	pub fn new() -> Self {
-		Self::from_keypair(ed::SigningKey::generate(&mut OsRngPanic))
+		Self::from_keypair(ed::SigningKey::generate(&mut SysRngPanic))
 	}
 
 	pub(crate) fn from_keypair(keypair: ed::SigningKey) -> Self {

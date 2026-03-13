@@ -2,7 +2,7 @@ use super::{PublicKey, SharedSecret};
 #[cfg(feature = "b64")]
 use crate::error::DecodeError;
 use crate::error::TryFromError;
-use crate::utils::OsRngPanic;
+use crate::utils::SysRngPanic;
 
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
@@ -20,7 +20,7 @@ pub struct EphemeralKeypair {
 
 impl EphemeralKeypair {
 	pub fn new() -> Self {
-		let secret = x::EphemeralSecret::random_from_rng(&mut OsRngPanic);
+		let secret = x::EphemeralSecret::random_from_rng(&mut SysRngPanic);
 		let public = PublicKey::from_ephemeral_secret(&secret);
 
 		Self { secret, public }
@@ -65,7 +65,7 @@ impl Keypair {
 
 	pub fn new() -> Self {
 		Self::from_static_secret(x::StaticSecret::random_from_rng(
-			&mut OsRngPanic,
+			&mut SysRngPanic,
 		))
 	}
 

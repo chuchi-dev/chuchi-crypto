@@ -1,17 +1,16 @@
 #[cfg(feature = "b64")]
 use crate::error::DecodeError;
 use crate::error::TryFromError;
-use crate::utils::OsRngPanic;
+use crate::utils::SysRngPanic;
 
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
-
-use rand::RngCore;
 
 #[cfg(feature = "b64")]
 use base64::Engine;
 #[cfg(feature = "b64")]
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use rand::Rng;
 
 /// A random Token
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -28,7 +27,7 @@ impl<const S: usize> Token<S> {
 	pub fn new() -> Self {
 		let mut bytes = [0u8; S];
 
-		OsRngPanic.fill_bytes(&mut bytes);
+		SysRngPanic.fill_bytes(&mut bytes);
 
 		Self { bytes }
 	}

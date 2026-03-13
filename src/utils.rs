@@ -1,20 +1,24 @@
-use rand::{CryptoRng, RngCore, TryRngCore, rngs::OsRng};
+use std::convert::Infallible;
+
+use rand::{TryCryptoRng, TryRng, rngs::SysRng};
 
 /// This is a wrapper around the `OsRng` that may panic.
-pub struct OsRngPanic;
+pub struct SysRngPanic;
 
-impl RngCore for OsRngPanic {
-	fn next_u32(&mut self) -> u32 {
-		OsRng.try_next_u32().unwrap()
+impl TryRng for SysRngPanic {
+	type Error = Infallible;
+
+	fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
+		Ok(SysRng.try_next_u32().unwrap())
 	}
 
-	fn next_u64(&mut self) -> u64 {
-		OsRng.try_next_u64().unwrap()
+	fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
+		Ok(SysRng.try_next_u64().unwrap())
 	}
 
-	fn fill_bytes(&mut self, dest: &mut [u8]) {
-		OsRng.try_fill_bytes(dest).unwrap();
+	fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Self::Error> {
+		Ok(SysRng.try_fill_bytes(dest).unwrap())
 	}
 }
 
-impl CryptoRng for OsRngPanic {}
+impl TryCryptoRng for SysRngPanic {}
